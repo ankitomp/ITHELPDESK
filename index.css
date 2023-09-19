@@ -124,7 +124,7 @@ body {
 .chat-box-footer input {
   padding: 10px;
   border: none;
-  -webkit-appearance: none;
+  /* -webkit-appearance: none; */
   border-radius: 50px;
   background: whitesmoke;
   margin: 10px;
@@ -222,11 +222,11 @@ body {
   z-index: 30;
 }
 
-@media screen only and (max-width: 450px) {
+/* @media screen only and (max-width: 450px) {
   .chat-box {
     min-width: 100% !important;
   }
-}
+} */
 
 /* Add your desired styles here */
 .option-button {
