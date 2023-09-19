@@ -1,123 +1,181 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    const chatBox = document.querySelector('.chat-box-body');
+    const inputField = document.querySelector('.chat-box-footer input');
+    const chatButton = document.querySelector('.chat-button');
+    const chatHeader = document.querySelector('.chat-box-header p');
+    const addExtraButton = document.getElementById('addExtra');
+    const modal = document.querySelector('.modal');
+    const modalCloseButtons = document.querySelectorAll('.modal-close-button');
+
+    let conversationContext = null; // To track the conversation context
+
+
+// Initialize a variable to track the chat box's visibility state
+let isChatBoxVisible = false;
+
+// Add a click event listener to the chatButton to toggle the chat box and button
+chatButton.addEventListener('click', function () {
+    const chatBox = document.querySelector('.chat-box');
     
-    // Add a click event listener to the option buttons
-var optionButtons = document.querySelectorAll('.option-button');
-optionButtons.forEach(function(optionButton) {
-    optionButton.addEventListener('click', function() {
-        var selectedIndex = optionButton.getAttribute('data-index');
-        var selectedOption = autoReply.options[selectedIndex];
-        sendMessage(selectedOption, 'user');
-        
-        // Check if Option 2 was selected
-        if (selectedOption === "Option 2") {
-            var option2Response = "You selected Option 2. Here's the response for Option 2.";
-            sendMessage(option2Response, 'bot');
-        }
-        
-        // You can handle other options similarly
+    // Toggle the visibility of the chat box
+    isChatBoxVisible = !isChatBoxVisible;
+    
+    if (isChatBoxVisible) {
+        chatBox.style.visibility = 'visible';
+        chatButton.style.display = 'none';
+    } else {
+        chatBox.style.visibility = 'hidden';
+        chatButton.style.display = 'block'; // or 'inline-block' as needed
+    }
+});
+
+// Add a click event listener to the chatHeader to hide the chat box
+chatHeader.addEventListener('click', function () {
+    const chatBox = document.querySelector('.chat-box');
+    
+    // Hide the chat box
+    chatBox.style.visibility = 'hidden';
+    
+    // Show the chatButton
+    chatButton.style.display = 'block'; // or 'inline-block' as needed
+    
+    // Update the visibility state variable
+    isChatBoxVisible = false;
+});
+
+
+addExtraButton.addEventListener('click', function () {
+    // Reset the conversation context and clear the chat box
+    conversationContext = null;
+    chatBox.innerHTML = ''; // Clear the chat box content
+
+    // Display a welcome message as a receive chat message
+    const welcomeMessage = "Welcome! How can I assist you today?";
+    sendMessage(welcomeMessage, 'bot');
+
+    // Display an initial message for the user to start the conversation
+    const initialPrompt = "Type 'Hi' or 'Hello' to begin.";
+    sendMessage(initialPrompt, 'bot');
+});
+
+    modalCloseButtons.forEach(function (closeButton) {
+        closeButton.addEventListener('click', function () {
+            modal.classList.toggle('show-modal');
+        });
     });
-}); 
-    
-    
-    // Function to send a message
+
+    // Function to scroll to the bottom of the chat box
+    function scrollToBottom() {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
     function sendMessage(message, sender) {
-        var timestamp = new Date().toLocaleTimeString();
-        var chatBox = document.querySelector('.chat-box-body');
-        var messageClass = sender === 'user' ? 'chat-box-body-send' : 'chat-box-body-receive';
+        const timestamp = new Date().toLocaleTimeString();
+        const messageClass = sender === 'user' ? 'chat-box-body-send' : 'chat-box-body-receive';
 
-        var messageDiv = document.createElement('div');
+        const messageDiv = document.createElement('div');
         messageDiv.className = messageClass;
-        messageDiv.innerHTML = '<p>' + message + '</p><span>' + timestamp + '</span>';
+        messageDiv.innerHTML = `<p>${message}</p><span>${timestamp}</span>`;
 
-        // Append the message to the chat box
         chatBox.appendChild(messageDiv);
+
+        // Call the scrollToBottom function to scroll to the bottom
+        scrollToBottom();
     }
 
-    // Function to generate a response with options
     function generateAutoReply(userMessage) {
-        var lowercaseMessage = userMessage.toLowerCase();
+        const lowercaseMessage = userMessage.toLowerCase();
+        if (conversationContext === null) {
+            if (lowercaseMessage.includes("hello") || lowercaseMessage.includes("hi")) {
+                conversationContext = "Welcome to IT Helpdesk"; 
+                return {
+                    response: "Hello! How can I assist you?",
+                    options: ["Teams", "Outlook", "Laptop"]
+                };
+            } else if (lowercaseMessage.includes("bye") || lowercaseMessage.includes("thanks")) {
+                return "Thank you for contacting IT Helpdesk";
+            }}
         
-        if (lowercaseMessage.includes("hello") || lowercaseMessage.includes("hi")) {
-            var response = "Hello! How can I assist you?";
-            var options = ["Option 1", "Option 2", "Option 3"];
-            return { response: response, options: options };
-        } else if (lowercaseMessage.includes("option 2")) { // Check for "Option 2"
-            var option2Response = "You selected Option 2. Here's the response for Option 2.";
-            return option2Response;
-        } else {
-            return "I'm sorry, I didn't understand that.";
-        }
+        // If none of the conditions match, provide a default response
+        return "I'm sorry, I didn't understand that.";
     }
     
-
-    // Event listener for user input
-    var inputField = document.querySelector('.chat-box-footer input');
-    inputField.addEventListener('keydown', function(e) {
-        if (e.keyCode === 13) { // Enter key pressed
-            var userMessage = inputField.value;
+    inputField.addEventListener('keydown', function (e) {
+        if (e.keyCode === 13) {
+            const userMessage = inputField.value;
             sendMessage(userMessage, 'user');
-            inputField.value = ''; // Clear the input field
+            inputField.value = '';
 
-            var autoReply = generateAutoReply(userMessage);
+            const autoReply = generateAutoReply(userMessage);
 
-            if (typeof autoReply === 'object' && autoReply.response && autoReply.options) {
-                // If the response is an object with both response text and options
+            if (autoReply) {
                 sendMessage(autoReply.response, 'bot');
-                // Display the options to the user
-                var optionsDiv = document.createElement('div');
-                optionsDiv.className = 'chat-box-body-receive-options';
-                autoReply.options.forEach(function(option, index) {
-                    var optionButton = document.createElement('button');
-                    optionButton.className = 'option-button';
-                    optionButton.setAttribute('data-index', index);
-                    optionButton.textContent = option;
-                    optionsDiv.appendChild(optionButton);
-                });
-                document.querySelector('.chat-box-body').appendChild(optionsDiv);
+            }
 
-                // Add a click event listener to the option buttons
-                var optionButtons = document.querySelectorAll('.option-button');
-                optionButtons.forEach(function(optionButton) {
-                    optionButton.addEventListener('click', function() {
-                        var selectedIndex = optionButton.getAttribute('data-index');
-                        var selectedOption = autoReply.options[selectedIndex];
-                        sendMessage(selectedOption, 'user');
-                        // You can handle the user's choice here
-                    });
-                });
-            } else {
-                // If it's a regular text response
-                sendMessage(autoReply, 'bot');
+            // If options are available, display them
+            if (autoReply.options) {
+                displayOptions(autoReply.options);
             }
         }
     });
 
-    // Close chatbox event
-    var chatHeader = document.querySelector('.chat-box-header p');
-    chatHeader.addEventListener('click', function() {
-        document.querySelector('.chat-box').style.visibility = 'hidden';
+    // Event delegation for option buttons
+    chatBox.addEventListener('click', function (e) {
+        if (e.target.classList.contains('option-button')) {
+            const selectedOption = e.target.textContent;
+            handleOptionSelection(selectedOption);
+        }
     });
 
-    // Show chatbox event
-    var chatButton = document.querySelector('.chat-button');
-    chatButton.addEventListener('click', function() {
-        chatButton.style.display = 'none';
-        document.querySelector('.chat-box').style.visibility = 'visible';
-    });
+    function handleOptionSelection(option) {
+        // Handle option selection based on the context
+        if (conversationContext === "Welcome to IT Helpdesk") {
+            if (option === "Teams") {
+                conversationContext = "Teams";
+                const teamOptions = ["Messages not synchronizing", "Not able to open Teams", "Teams running slow"];
+                displayOptions(teamOptions);
+            } else if (option === "Outlook") {
+                conversationContext = "Outlook";
+                const outlookOptions = ["Emails not synchronizing", "Not able to open Outlook", "Outlook stuck"];
+                displayOptions(outlookOptions);
+            } else if (option === "Laptop") {
+                conversationContext = "Laptop";
+                const laptopOptions = ["Running slow", "Files not opening", "Screen freeze"];
+                displayOptions(laptopOptions);
+            }
+        } else if (conversationContext === "Teams" || conversationContext === "Outlook" || conversationContext === "Laptop") {
+            // Handle further option selection here
+            // You can customize this part based on your logic
+            sendMessage(`You selected: ${option}`, 'user');
+        }
+    }
 
-    // Toggle modal
-    var addExtraButton = document.getElementById('addExtra');
-    addExtraButton.addEventListener('click', function() {
-        var modal = document.querySelector('.modal');
-        modal.classList.toggle('show-modal');
-    });
-
-    // Close modal
-    var modalCloseButton = document.querySelectorAll('.modal-close-button');
-    modalCloseButton.forEach(function(closeButton) {
-        closeButton.addEventListener('click', function() {
-            var modal = document.querySelector('.modal');
-            modal.classList.toggle('show-modal');
+    function displayOptions(options, context) {
+        // Display options here based on your logic
+        const optionsDiv = document.createElement('div');
+    
+        // Determine the appropriate context-specific class based on the context
+        let optionsClass = '';
+        if (context === 'Teams') {
+            optionsClass = 'team-options';
+        } else if (context === 'Outlook') {
+            optionsClass = 'outlook-options';
+        } else if (context === 'Laptop') {
+            optionsClass = 'laptop-options';
+        }
+    
+        optionsDiv.className = `chat-box-body-receive-options ${optionsClass}`;
+    
+        options.forEach(function (option, index) {
+            const optionButton = document.createElement('button');
+            optionButton.className = 'option-button';
+            optionButton.textContent = option;
+            optionsDiv.appendChild(optionButton);
         });
-    });
+    
+        chatBox.appendChild(optionsDiv);
+    
+        // Call the scrollToBottom function to scroll to the bottom
+        scrollToBottom();    
+    }
 });
